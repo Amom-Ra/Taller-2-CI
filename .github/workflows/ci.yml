@@ -39,13 +39,32 @@ jobs:
         run: |
           pytest --ignore=tests/test_acceptance_app.py  # Genera un informe XML para SonarCloud
 
+     # - name: Run Acceptance Tests
+      #  env:
+      #     APP_BASE_URL: http://localhost:8000
+       # run: |
+        #  gunicorn --workers=2 --bind=0.0.0.0:8000 app.app:app &
+        #  sleep 10
+         # pytest tests/test_acceptance_app.py --cov-report=xml:acceptance_coverage.xml --html=acceptance_report.html # Genera un informe XML con otro nombre, para no sobre-escribir el anterior de  las pruebas unitarias
+
       - name: Run Acceptance Tests
         env:
-           APP_BASE_URL: http://localhost:8000
+            APP_BASE_URL: http://localhost:8000
         run: |
-          gunicorn --workers=2 --bind=0.0.0.0:8000 app.app:app &
-          sleep 10
-          pytest tests/test_acceptance_app.py --cov-report=xml:acceptance_coverage.xml --html=acceptance_report.html # Genera un informe XML con otro nombre, para no sobre-escribir el anterior de  las pruebas unitarias
+          # Iniciar gunicorn guardando los logs
+          gunicorn --workers=2 --bind=0.0.0.0:8000 app.app:app > gunicorn.log 2>&1 &
+          
+          echo "Esperando a que Gunicorn inicie..."
+          for i in {1..15}; do
+            curl -s http://localhost:8000 > /dev/null && echo "¡Servidor arriba!" && break
+            sleep 1
+          done
+          
+          # Si falla, esto detendrá el pipeline y te mostrará el error real de Gunicorn
+          curl -s http://localhost:8000 > /dev/null || (echo "❌ Gunicorn falló al iniciar. Logs:" && cat gunicorn.log && exit 1)
+          
+          pytest tests/test_acceptance_app.py --cov-report=xml:acceptance_coverage.xml --html=acceptance_report.html
+
 
       - name: Upload Test Reports Artifacts
         uses: actions/upload-artifact@v4
