@@ -89,7 +89,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ github.sha }}
-            ${{ vars.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/taller-2-ci:${{ github.sha }}
+            ${{ vars.DOCKERHUB_USERNAME }}/taller-2-ci:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
